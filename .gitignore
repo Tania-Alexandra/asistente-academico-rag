@@ -1,0 +1,12 @@
+# Esto ignora archivos de entorno con claves sensibles
+.env
+.env.local
+
+# Ignorar carpetas temporales
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ignorar base de datos vectorial (se regenera)
+chroma_db/

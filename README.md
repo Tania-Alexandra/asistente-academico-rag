@@ -51,3 +51,4 @@ salir
   - `GITHUB_TOKEN`
   - `OPENAI_API_KEY` (opcional si usas OpenAI directo)
 - Los PDFs deben estar en la carpeta `data/`.
+- Se quito el token de .env por seguridad y quedo comentado en donde debe ir. 

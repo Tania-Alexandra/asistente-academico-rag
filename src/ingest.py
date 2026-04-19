@@ -2,14 +2,14 @@ import os
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings
 
 load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "data"))
-CHROMA_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "chroma_db"))
+FAISS_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "faiss_db"))
 
 def ingest_documents():
     print("📚 [IE3] Cargando documentos desde data/...")
@@ -29,21 +29,20 @@ def ingest_documents():
     chunks = splitter.split_documents(docs)
     print(f"✅ Se generaron {len(chunks)} fragmentos.")
 
-    print("🧠 Generando embeddings y guardando en ChromaDB...")
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2",
-        model_kwargs={'device': 'cpu'}
+    print("🧠 Generando embeddings y guardando en FAISS...")
+    
+    # Configuración simplificada para GitHub Models (Azure OpenAI)
+    embeddings = OpenAIEmbeddings(
+        model="text-embedding-3-small",
+        openai_api_key=os.getenv("GITHUB_TOKEN"),
+        openai_api_base="https://models.inference.ai.azure.com"
     )
     
-    # ✅ Chroma guarda automáticamente con persist_directory
-    vectorstore = Chroma.from_documents(
-        documents=chunks,
-        embedding=embeddings,
-        persist_directory=CHROMA_DIR
-    )
-    # ❌ vectorstore.persist() YA NO EXISTE en versiones recientes
-    print(f"💾 Base vectorial guardada en: {CHROMA_DIR}")
-    print(f"📊 Vectores almacenados: {vectorstore._collection.count()}")
+    # ✅ FAISS no requiere dependencias pesadas
+    vectorstore = FAISS.from_documents(chunks, embeddings)
+    vectorstore.save_local(FAISS_DIR)
+    print(f"💾 Base vectorial guardada en: {FAISS_DIR}")
+    print(f"📊 Vectores almacenados: {len(chunks)}")
 
 if __name__ == "__main__":
     ingest_documents()

@@ -2,9 +2,8 @@ import os
 from dotenv import load_dotenv
 
 # Importaciones correctas y modernas
-from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_openai import ChatOpenAI
+from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
@@ -13,22 +12,30 @@ from langchain_core.output_parsers import StrOutputParser
 load_dotenv()
 
 # Configuración de rutas
-CHROMA_DIR = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
-AZURE_ENDPOINT = os.getenv("GITHUB_BASE_URL") or os.getenv("OPENAI_BASE_URL")
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+FAISS_DIR = os.path.join(os.path.dirname(__file__), "..", "faiss_db")
 
 def main():
-    print("🚀 Iniciando Asistente Académico RAG...")
+    print("Iniciando Asistente Académico RAG...")
+    
+    # Verificar credenciales
+    api_key = os.getenv("GITHUB_TOKEN")
+    if not api_key:
+        print("X Error: Configura GITHUB_TOKEN en .env")
+        return
     
     # 1. Cargar base de datos vectorial
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    vectorstore = Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings)
+    embeddings = OpenAIEmbeddings(
+        model="text-embedding-3-small",
+        openai_api_key=api_key,
+        openai_api_base="https://models.inference.ai.azure.com"
+    )
+    vectorstore = FAISS.load_local(FAISS_DIR, embeddings, allow_dangerous_deserialization=True)
     
     # 2. Configurar el LLM
     llm = ChatOpenAI(
         model="gpt-4o-mini",
-        openai_api_base=AZURE_ENDPOINT,
-        openai_api_key=GITHUB_TOKEN,
+        openai_api_key=api_key,
+        openai_api_base="https://models.inference.ai.azure.com",
         temperature=0.1
     )
     

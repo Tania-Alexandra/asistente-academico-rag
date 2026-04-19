@@ -66,7 +66,7 @@ Respuesta:"""
         if not q.strip(): 
             continue
         
-        print("⏳ Buscando...")
+        print("Buscando ...")
         try:
             # Ejecutar el pipeline
             res = chain.invoke(q)

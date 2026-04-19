@@ -1,12 +1,12 @@
-# Esto ignora archivos de entorno con claves sensibles
-.env
-.env.local
+# Entornos virtuales
+.venv/
+env/
+venv/
 
-# Ignorar carpetas temporales
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-
-# Ignorar base de datos vectorial (se regenera)
+# Base de datos vectorial
 chroma_db/
+
+# Archivos de entorno y logs
+.env
+__pycache__/
+*.pyc

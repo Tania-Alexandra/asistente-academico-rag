@@ -1,69 +1,71 @@
 import os
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
-from langchain.llms import OpenAI
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 
+# Importaciones correctas y modernas
+from langchain_chroma import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
+
+# Cargar variables de entorno (.env)
 load_dotenv()
 
-CHROMA_DIR = "../chroma_db"
-
-def setup_rag_chain():
-    print("🔍 [IE3] Cargando base vectorial...")
-    embeddings = OpenAIEmbeddings()
-    vectorstore = Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings)
-
-    # 📝 [IE2] Prompt optimizado: estructura clara, contexto, restricciones y cita obligatoria
-    prompt_template = """Eres un asistente académico oficial de la institución.
-Tu tarea es responder consultas de estudiantes utilizando ÚNICAMENTE la información de los documentos proporcionados.
-
-Instrucciones:
-1. Responde de forma clara, directa y en español.
-2. SIEMPRE cita la fuente documental entre paréntesis al final, ej: (Reglamento Académico, p. X).
-3. Si la información no está en los documentos, responde EXACTAMENTE: 
-   "No encuentro esta información en los documentos oficiales. Te sugiero contactar a secretaría académica."
-4. Nunca inventes datos, asumas información externa ni des consejos no documentados.
-
-Contexto recuperado:
-{context}
-
-Pregunta:
-{question}
-
-Respuesta:"""
-
-    prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
-
-    # temperature=0 reduce alucinaciones y favorece respuestas fieles [IE4]
-    llm = OpenAI(temperature=0, model_name="gpt-3.5-turbo-instruct")
-    
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=vectorstore.as_retriever(search_kwargs={"k": 3}), # recupera 3 fragmentos más relevantes
-        chain_type_kwargs={"prompt": prompt}
-    )
-    return qa_chain
+# Configuración de rutas
+CHROMA_DIR = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
+AZURE_ENDPOINT = os.getenv("GITHUB_BASE_URL") or os.getenv("OPENAI_BASE_URL")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 def main():
-    if not os.path.exists(CHROMA_DIR):
-        print("⚠️ No se encontró la base vectorial. Ejecuta primero: python3 src/ingest.py")
-        return
-
-    qa = setup_rag_chain()
-    print("\n Asistente Académico RAG listo. Escribe 'salir' para terminar.")
+    print("🚀 Iniciando Asistente Académico RAG...")
     
+    # 1. Cargar base de datos vectorial
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    vectorstore = Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings)
+    
+    # 2. Configurar el LLM
+    llm = ChatOpenAI(
+        model="gpt-4o-mini",
+        openai_api_base=AZURE_ENDPOINT,
+        openai_api_key=GITHUB_TOKEN,
+        temperature=0.1
+    )
+    
+    # 3. Definir el prompt
+    prompt_template = """Eres un asistente académico oficial. Responde SOLO con la información de los documentos.
+Si la respuesta no está en el contexto, di EXACTAMENTE: "No encuentro esta información en los documentos oficiales."
+
+Contexto: {context}
+Pregunta: {question}
+Respuesta:"""
+    prompt = ChatPromptTemplate.from_template(prompt_template)
+    
+    # 4. Crear el pipeline (LCEL - esto reemplaza a RetrievalQA)
+    chain = (
+        {"context": vectorstore.as_retriever(search_kwargs={"k": 3}), "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+    
+    print("✅ Listo. Escribe 'salir' para terminar.\n")
+    
+    # 5. Bucle de consulta
     while True:
-        query = input("\n🙋 Estudiante: ")
-        if query.lower() in ["salir", "exit", "q"]:
-            print("👋 ¡Hasta pronto!")
+        q = input("👤 Tú: ")
+        if q.lower() in ['salir', 'exit', 'q']: 
             break
-            
-        print("🤖 Pensando...")
-        result = qa.run(query)
-        print(f"🤖 Asistente: {result}")
+        if not q.strip(): 
+            continue
+        
+        print("⏳ Buscando...")
+        try:
+            # Ejecutar el pipeline
+            res = chain.invoke(q)
+            print(f"🤖 IA: {res}\n")
+        except Exception as e:
+            print(f"❌ Error al procesar: {e}\n")
 
 if __name__ == "__main__":
     main()

@@ -42,6 +42,14 @@ python src/main.py
 salir
 ```
 
+7. Ver el dashboard de observabilidad:
+
+```bash
+python src/dashboard.py
+```
+
+Luego abre http://127.0.0.1:8000/ para revisar métricas, logs y el estado reciente del agente.
+
 ## Notas importantes
 
 - El proyecto utiliza `FAISS` como almacén vectorial en lugar de `Chroma` para evitar problemas de compatibilidad en este entorno.

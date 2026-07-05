@@ -1,12 +1,14 @@
 import os
+import time
 from dotenv import load_dotenv
 
-# Importaciones correctas y modernas
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
+
+from observability import ObservabilityRecorder, should_block_query
 
 # Cargar variables de entorno (.env)
 load_dotenv()
@@ -15,8 +17,10 @@ load_dotenv()
 FAISS_DIR = os.path.join(os.path.dirname(__file__), "..", "faiss_db")
 
 def main():
+    recorder = ObservabilityRecorder()
     print("Iniciando Asistente Académico RAG...")
-    
+    recorder.logger.info("assistant_started")
+
     # Verificar credenciales
     api_key = os.getenv("GITHUB_TOKEN")
     if not api_key:
@@ -66,12 +70,43 @@ Respuesta:"""
         if not q.strip(): 
             continue
         
+        if should_block_query(q):
+            recorder.record_request(
+                question=q,
+                response="Solicitud bloqueada por guardrail de seguridad.",
+                latency_ms=0.0,
+                success=False,
+                error="Pregunta bloqueada por seguridad",
+                tokens=0,
+                expected_keywords=["seguridad"],
+            )
+            print("🛡️ Solicitud bloqueada por política de seguridad.\n")
+            continue
+
         print("Buscando ...")
+        start = time.time()
         try:
-            # Ejecutar el pipeline
             res = chain.invoke(q)
+            latency_ms = (time.time() - start) * 1000
+            recorder.record_request(
+                question=q,
+                response=res,
+                latency_ms=latency_ms,
+                success=True,
+                tokens=len((q + res).split()),
+                expected_keywords=["reglamento", "titulación"],
+            )
             print(f"🤖 IA: {res}\n")
         except Exception as e:
+            latency_ms = (time.time() - start) * 1000
+            recorder.record_request(
+                question=q,
+                response=str(e),
+                latency_ms=latency_ms,
+                success=False,
+                error=str(e),
+                tokens=0,
+            )
             print(f"❌ Error al procesar: {e}\n")
 
 if __name__ == "__main__":

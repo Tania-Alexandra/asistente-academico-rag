@@ -1,0 +1,13 @@
+2026-07-05 07:26:30,727 | INFO | assistant_started
+2026-07-05 07:28:00,446 | INFO | assistant_started
+2026-07-05 07:28:01,855 | ERROR | {"event": "request_completed", "success": false, "latency_ms": 849.72, "tokens": 30, "error": "Error code: 401 - {'error': {'message': 'Incorrect API key provided: ghu_7xmQ****************************O6KA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}"}
+2026-07-05 07:29:30,849 | INFO | assistant_started
+2026-07-05 07:30:48,222 | INFO | assistant_started
+2026-07-05 07:32:51,531 | INFO | assistant_started
+2026-07-05 07:32:53,806 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1705.77, "tokens": 12, "error": null}
+2026-07-05 07:34:59,299 | INFO | assistant_started
+2026-07-05 07:35:01,973 | INFO | {"event": "request_completed", "success": true, "latency_ms": 2033.59, "tokens": 13, "error": null}
+2026-07-05 07:35:51,671 | INFO | assistant_started
+2026-07-05 07:35:54,094 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1839.5, "tokens": 12, "error": null}
+2026-07-05 07:36:32,854 | INFO | assistant_started
+2026-07-05 07:36:34,859 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1453.6, "tokens": 13, "error": null}

@@ -11,10 +11,20 @@ from langchain_core.output_parsers import StrOutputParser
 from observability import ObservabilityRecorder, should_block_query
 
 # Cargar variables de entorno (.env)
-load_dotenv()
+load_dotenv(override=True)
 
 # Configuración de rutas
 FAISS_DIR = os.path.join(os.path.dirname(__file__), "..", "faiss_db")
+
+
+def get_api_credentials():
+    github_token = os.getenv("GITHUB_TOKEN")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    api_base = os.getenv("GITHUB_BASE_URL")
+    if github_token:
+        return github_token, api_base, "github"
+    return openai_key, api_base, "openai"
+
 
 def main():
     recorder = ObservabilityRecorder()
@@ -22,26 +32,33 @@ def main():
     recorder.logger.info("assistant_started")
 
     # Verificar credenciales
-    api_key = os.getenv("GITHUB_TOKEN")
+    api_key, api_base, provider = get_api_credentials()
     if not api_key:
-        print("X Error: Configura GITHUB_TOKEN en .env")
+        print("X Error: Configura GITHUB_TOKEN o OPENAI_API_KEY en .env")
+        return
+    if provider == "github" and not api_base:
+        print("X Error: Configura GITHUB_BASE_URL en .env cuando uses GITHUB_TOKEN")
         return
     
     # 1. Cargar base de datos vectorial
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        openai_api_key=api_key,
-        openai_api_base="https://models.inference.ai.azure.com"
-    )
+    embeddings_kwargs = {
+        "model": "text-embedding-3-small",
+        "openai_api_key": api_key,
+    }
+    if api_base:
+        embeddings_kwargs["openai_api_base"] = api_base
+    embeddings = OpenAIEmbeddings(**embeddings_kwargs)
     vectorstore = FAISS.load_local(FAISS_DIR, embeddings, allow_dangerous_deserialization=True)
     
     # 2. Configurar el LLM
-    llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        openai_api_key=api_key,
-        openai_api_base="https://models.inference.ai.azure.com",
-        temperature=0.1
-    )
+    llm_kwargs = {
+        "model": "gpt-4o-mini",
+        "openai_api_key": api_key,
+        "temperature": 0.1,
+    }
+    if api_base:
+        llm_kwargs["openai_api_base"] = api_base
+    llm = ChatOpenAI(**llm_kwargs)
     
     # 3. Definir el prompt
     prompt_template = """Eres un asistente académico oficial. Responde SOLO con la información de los documentos.

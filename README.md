@@ -50,6 +50,14 @@ python src/dashboard.py
 
 Luego abre http://127.0.0.1:8000/ para revisar métricas, logs y el estado reciente del agente.
 
+8. Ejecutar pruebas de carga (variabilidad de datos):
+
+```bash
+python src/load_test.py 10
+```
+
+Genera 10 consultas variadas, pruebas de seguridad (guardrails) y un reporte con latencia, precisión, consistencia y uso de recursos.
+
 ## Notas importantes
 
 - El proyecto utiliza `FAISS` como almacén vectorial en lugar de `Chroma` para evitar problemas de compatibilidad en este entorno.

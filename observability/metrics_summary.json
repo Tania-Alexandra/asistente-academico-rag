@@ -1,0 +1,11 @@
+{
+  "request_count": 5,
+  "success_rate": 0.8,
+  "precision_score": 0.2,
+  "latency_ms": 1576.44,
+  "consistency_score": 0.74,
+  "error_rate": 0.2,
+  "avg_tokens": 16.0,
+  "avg_cpu_percent": 45.2,
+  "avg_memory_mb": 169.55
+}

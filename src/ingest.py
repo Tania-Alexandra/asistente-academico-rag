@@ -8,11 +8,20 @@ from langchain_openai import OpenAIEmbeddings
 
 from observability import ObservabilityRecorder, should_block_query
 
-load_dotenv()
+load_dotenv(override=True)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "data"))
 FAISS_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "faiss_db"))
+
+
+def get_api_credentials():
+    github_token = os.getenv("GITHUB_TOKEN")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    api_base = os.getenv("GITHUB_BASE_URL")
+    if github_token:
+        return github_token, api_base, "github"
+    return openai_key, api_base, "openai"
 
 def ingest_documents():
     recorder = ObservabilityRecorder()
@@ -46,11 +55,39 @@ def ingest_documents():
 
     print("🧠 Generando embeddings y guardando en FAISS...")
 
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        openai_api_key=os.getenv("GITHUB_TOKEN"),
-        openai_api_base="https://models.inference.ai.azure.com"
-    )
+    api_key, api_base, provider = get_api_credentials()
+    if not api_key:
+        print("X Error: Configura GITHUB_TOKEN o OPENAI_API_KEY en .env")
+        recorder.record_request(
+            question="ingestion",
+            response="No hay credenciales configuradas",
+            latency_ms=(time.time() - start_time) * 1000,
+            success=False,
+            error="No API key configured",
+            tokens=0,
+            expected_keywords=["apikey"],
+        )
+        return
+    if provider == "github" and not api_base:
+        print("X Error: Configura GITHUB_BASE_URL en .env cuando uses GITHUB_TOKEN")
+        recorder.record_request(
+            question="ingestion",
+            response="No hay GITHUB_BASE_URL configurada",
+            latency_ms=(time.time() - start_time) * 1000,
+            success=False,
+            error="GITHUB_BASE_URL missing",
+            tokens=0,
+            expected_keywords=["apikey"],
+        )
+        return
+
+    embeddings_kwargs = {
+        "model": "text-embedding-3-small",
+        "openai_api_key": api_key,
+    }
+    if api_base:
+        embeddings_kwargs["openai_api_base"] = api_base
+    embeddings = OpenAIEmbeddings(**embeddings_kwargs)
 
     vectorstore = FAISS.from_documents(chunks, embeddings)
     vectorstore.save_local(FAISS_DIR)

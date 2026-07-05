@@ -21,8 +21,9 @@ python -m pip install -r requirements.txt
 3. Configurar variables de entorno:
 
 - Copia `.env.example` a `.env`
-- Rellena tu `GITHUB_TOKEN` y, si usas OpenAI directo, `OPENAI_API_KEY`
-- El proyecto ya está configurado para usar GitHub Models / Azure OpenAI en `GITHUB_BASE_URL`
+- Rellena tu `GITHUB_TOKEN` y `GITHUB_BASE_URL`
+- Si usas OpenAI directo en lugar de GitHub Models / Azure, deja `GITHUB_TOKEN` vacío y pon `OPENAI_API_KEY`
+- El proyecto usa `GITHUB_TOKEN` si está presente; si no, usa `OPENAI_API_KEY`
 
 4. Ingestar los PDFs en `data/`:
 

@@ -11,3 +11,23 @@
 2026-07-05 07:35:54,094 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1839.5, "tokens": 12, "error": null}
 2026-07-05 07:36:32,854 | INFO | assistant_started
 2026-07-05 07:36:34,859 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1453.6, "tokens": 13, "error": null}
+2026-07-11 09:50:47,777 | INFO | assistant_started
+2026-07-11 10:01:07,350 | INFO | assistant_started
+2026-07-11 10:01:50,523 | INFO | {"event": "request_completed", "success": true, "latency_ms": 2064.69, "tokens": 12, "error": null}
+2026-07-11 10:02:31,867 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1714.16, "tokens": 48, "error": null}
+2026-07-11 10:07:21,840 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1435.45, "tokens": 13, "error": null}
+2026-07-11 10:07:57,672 | INFO | {"event": "request_completed", "success": true, "latency_ms": 931.16, "tokens": 10, "error": null}
+2026-07-11 10:08:06,220 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1085.3, "tokens": 10, "error": null}
+2026-07-11 10:08:12,114 | INFO | {"event": "request_completed", "success": true, "latency_ms": 985.91, "tokens": 8, "error": null}
+2026-07-11 10:08:33,602 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1278.55, "tokens": 10, "error": null}
+2026-07-11 10:09:02,749 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1052.97, "tokens": 13, "error": null}
+2026-07-11 10:13:12,978 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1940.7, "tokens": 45, "error": null}
+2026-07-11 10:15:45,521 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1262.4, "tokens": 17, "error": null}
+2026-07-11 10:16:06,104 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1359.98, "tokens": 42, "error": null}
+2026-07-11 10:16:41,811 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1396.86, "tokens": 13, "error": null}
+2026-07-11 10:16:58,848 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1343.86, "tokens": 11, "error": null}
+2026-07-11 10:17:17,165 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1154.19, "tokens": 10, "error": null}
+2026-07-11 10:18:00,897 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1005.56, "tokens": 10, "error": null}
+2026-07-11 10:20:16,958 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1415.02, "tokens": 11, "error": null}
+2026-07-11 10:20:34,206 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1370.85, "tokens": 14, "error": null}
+2026-07-11 10:23:46,394 | INFO | {"event": "request_completed", "success": true, "latency_ms": 1673.57, "tokens": 33, "error": null}

@@ -92,6 +92,8 @@ def run_load_test(num_queries: int = 10, include_security_tests: bool = True) ->
         llm_kwargs = {
             "model": "gpt-4o-mini",
             "openai_api_key": api_key,
+            "temperature": 0.1,
+        }
         if api_base:
             llm_kwargs["openai_api_base"] = api_base
         llm = ChatOpenAI(**llm_kwargs)

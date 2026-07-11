@@ -8,7 +8,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-from observability import ObservabilityRecorder, should_block_query
+from agent import AcademicAgent
+from observability import ObservabilityRecorder
 
 # Cargar variables de entorno (.env)
 load_dotenv(override=True)
@@ -39,7 +40,7 @@ def main():
     if provider == "github" and not api_base:
         print("X Error: Configura GITHUB_BASE_URL en .env cuando uses GITHUB_TOKEN")
         return
-    
+
     # 1. Cargar base de datos vectorial
     embeddings_kwargs = {
         "model": "text-embedding-3-small",
@@ -49,7 +50,7 @@ def main():
         embeddings_kwargs["openai_api_base"] = api_base
     embeddings = OpenAIEmbeddings(**embeddings_kwargs)
     vectorstore = FAISS.load_local(FAISS_DIR, embeddings, allow_dangerous_deserialization=True)
-    
+
     # 2. Configurar el LLM
     llm_kwargs = {
         "model": "gpt-4o-mini",
@@ -59,7 +60,7 @@ def main():
     if api_base:
         llm_kwargs["openai_api_base"] = api_base
     llm = ChatOpenAI(**llm_kwargs)
-    
+
     # 3. Definir el prompt
     prompt_template = """Eres un asistente académico oficial. Responde SOLO con la información de los documentos.
 Si la respuesta no está en el contexto, di EXACTAMENTE: "No encuentro esta información en los documentos oficiales."
@@ -68,7 +69,7 @@ Contexto: {context}
 Pregunta: {question}
 Respuesta:"""
     prompt = ChatPromptTemplate.from_template(prompt_template)
-    
+
     # 4. Crear el pipeline (LCEL - esto reemplaza a RetrievalQA)
     chain = (
         {"context": vectorstore.as_retriever(search_kwargs={"k": 3}), "question": RunnablePassthrough()}
@@ -76,55 +77,25 @@ Respuesta:"""
         | llm
         | StrOutputParser()
     )
-    
+
+    agent = AcademicAgent(chain=chain, recorder=recorder)
+
     print("✅ Listo. Escribe 'salir' para terminar.\n")
-    
+
     # 5. Bucle de consulta
     while True:
         q = input("👤 Tú: ")
-        if q.lower() in ['salir', 'exit', 'q']: 
+        if q.lower() in ['salir', 'exit', 'q']:
             break
-        if not q.strip(): 
-            continue
-        
-        if should_block_query(q):
-            recorder.record_request(
-                question=q,
-                response="Solicitud bloqueada por guardrail de seguridad.",
-                latency_ms=0.0,
-                success=False,
-                error="Pregunta bloqueada por seguridad",
-                tokens=0,
-                expected_keywords=["seguridad"],
-            )
-            print("🛡️ Solicitud bloqueada por política de seguridad.\n")
+        if not q.strip():
             continue
 
         print("Buscando ...")
-        start = time.time()
-        try:
-            res = chain.invoke(q)
-            latency_ms = (time.time() - start) * 1000
-            recorder.record_request(
-                question=q,
-                response=res,
-                latency_ms=latency_ms,
-                success=True,
-                tokens=len((q + res).split()),
-                expected_keywords=["reglamento", "titulación"],
-            )
-            print(f"🤖 IA: {res}\n")
-        except Exception as e:
-            latency_ms = (time.time() - start) * 1000
-            recorder.record_request(
-                question=q,
-                response=str(e),
-                latency_ms=latency_ms,
-                success=False,
-                error=str(e),
-                tokens=0,
-            )
-            print(f"❌ Error al procesar: {e}\n")
+        result = agent.answer(q, expected_keywords=["reglamento", "titulación"])
+        if result["success"]:
+            print(f"🤖 IA: {result['response']}\n")
+        else:
+            print(f"{result['response']}\n")
 
 if __name__ == "__main__":
     main()
